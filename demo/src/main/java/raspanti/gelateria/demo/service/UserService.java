@@ -18,23 +18,50 @@ public class UserService {
     private SmsService smsService;
 
     @Autowired 
-    private PasswordEncoder passwordEnconder;
+    private PasswordEncoder passwordEncoder;
 
-    //Autocadastro de Cliente
-    public User registerCliente(String phoneNumber, String rawPassword){
+    // 1. Autocadastro do Cliente (informando telefone e senha)
+    public User registerCliente(String phoneNumber, String rawPassword) {
+        if (userRepository.findByPhoneNumber(phoneNumber).isPresent()) {
+            throw new RuntimeException("Este número de telefone já está cadastrado.");
+        }
+
         User user = new User();
         user.setPhoneNumber(phoneNumber);
-        user.setPassword(passwordEnconder.encode(rawPassword));
+        user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRole(Role.ROLE_CLIENTE);
-        user.setActive(false);
+        user.setActive(false); // Conta inativa até validar o SMS
 
-        String code = smsService.generateCode();
+        // Gera e envia o código SMS
+        String code = smsService.generateVerificationCode();
         user.setVerificationCode(code);
-
         smsService.sendSms(phoneNumber, code);
+
         return userRepository.save(user);
     }
 
-    
+    // Ativação da conta no primeior acesso
+    public boolean activateAccount(String phoneNumber, String code){
+        User user = userRepository.findByPhoneNumber(phoneNumber)
+            .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+
+        if (code.equals(user.getVerificationCode())){
+            user.setActive(true);
+            user.setVerificationCode(null);
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+    // Cadastro por Admin/Gerente
+    public User createUserByAdminOrGerente(String phoneNumber, String password, Role role) {
+        User user = new User();
+        user.setPhoneNumber(phoneNumber);
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole(role);
+        user.setActive(true);
+        return userRepository.save(user);
+    }
     
 }

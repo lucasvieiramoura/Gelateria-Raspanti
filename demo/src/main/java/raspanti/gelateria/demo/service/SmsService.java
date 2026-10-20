@@ -11,6 +11,17 @@ public class SmsService {
     }
 
     public void sendSms(String phoneNumber, String code) {
-        System.out.println("Enviado SMS para :"+phoneNumber+" com código: "+code);
+        System.out.println("==================================================");
+        System.out.println("[SMS ENVIADO] Para: " + phoneNumber);
+        System.out.println("Seu código de ativação na Gelateria Raspanti é: " + code);
+        System.out.println("==================================================");
     }
+
+    public String generateVerificationCode(){
+        Random random = new Random();
+        int code = 100000 + random.nextInt(900000);
+        return String.valueOf(code);
+    }
+
+    
 }
