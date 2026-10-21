@@ -1,4 +1,4 @@
-package raspanti.gelateria.demo.config;
+package raspanti.gelateria.ecommerce.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +16,12 @@ public class SecurityConfig {
     public PasswordEncoder passwordEnconder() {
         return new BCryptPasswordEncoder();
     }
+    
+    @Bean 
+    public org.springframework.security.authentication.AuthenticationManager authenticationManager(
+        org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    return authenticationConfiguration.getAuthenticationManager();
+}
 
     @Bean 
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -25,14 +31,14 @@ public class SecurityConfig {
                 // Endpints Públicos ( Cadastro de Cliente e Ativação SMS)
                 .requestMatchers("/api/auth/**").permitAll()
                 // Cadasdo de Geretne: Apenas ADMIN
-                .requestMatchers("/api/user/gerente").hasRole("ADMIN")
+                .requestMatchers("/api/user/gerente").hasAuthority("ROLE_ADMIN")
                 // Cadastro de Vendedor: ADMIN e Gerente 
-                .requestMatchers("/api/user/vendedor").hasAnyRole("ADMIN","GERENTE")
+                .requestMatchers("/api/user/vendedor").hasAnyAuthority("ROLE_ADMIN","ROLE_GERENTE")
                 // Gestão de Produtos: aPenas Gerente
-                .requestMatchers("/api/products/**").hasRole("GERENTE")
+                .requestMatchers("/api/products/**").hasAnyAuthority("ROLE_ADMIN","ROLE_GERENTE")
                 // Demais requisições precisam estar autenticadas
                 .anyRequest().authenticated()
-            );
+            ).httpBasic(httpBasic -> {});
         return http.build();
     }
 }

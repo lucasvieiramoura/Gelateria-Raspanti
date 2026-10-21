@@ -1,12 +1,12 @@
-package raspanti.gelateria.demo.service;
+package raspanti.gelateria.ecommerce.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import raspanti.gelateria.demo.model.Role;
-import raspanti.gelateria.demo.model.User;
-import raspanti.gelateria.demo.repository.UserRepository;
+import raspanti.gelateria.ecommerce.model.Role;
+import raspanti.gelateria.ecommerce.model.User;
+import raspanti.gelateria.ecommerce.repository.UserRepository;
 
 @Service 
 public class UserService {

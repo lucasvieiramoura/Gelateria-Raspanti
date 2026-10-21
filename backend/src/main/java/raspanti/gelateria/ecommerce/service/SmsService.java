@@ -1,4 +1,4 @@
-package raspanti.gelateria.demo.service;
+package raspanti.gelateria.ecommerce.service;
 
 import java.util.Random;
 

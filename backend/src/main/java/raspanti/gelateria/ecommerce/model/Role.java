@@ -1,4 +1,4 @@
-package raspanti.gelateria.demo.model;
+package raspanti.gelateria.ecommerce.model;
 
 public enum Role {
     ROLE_ADMIN,
