@@ -10,6 +10,7 @@ import raspanti.gelateria.ecommerce.model.Role;
 import raspanti.gelateria.ecommerce.model.User;
 import raspanti.gelateria.ecommerce.service.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 
 @RestController 
@@ -28,5 +29,23 @@ public class UserController {
     public ResponseEntity<User> createVendedor(@RequestParam String phone, @RequestParam String password) {
         return ResponseEntity.ok(userService.createUserByAdminOrGerente(phone, password, Role.ROLE_VENDEDOR));
     }
+
+    // Apenas ADMIN ou GERENTE podem criar funcionários
+    @PostMapping("/employee")
+    @PreAuthorize("hasAnyRole('ADMIN','GERENTE')")
+    public ResponseEntity<?> createEmployee(
+        @RequestParam String phone,
+        @RequestParam String password,
+        @RequestParam String roleStr ){
+        
+        try {
+            Role role = Role.valueOf(roleStr);
+            User employee = userService.createUserByAdminOrGerente(phone, password, role);
+            return ResponseEntity.ok("Funcionário cadsatrado com sucesso!");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Erro ao cadastrar funcionários");
+        }
+    }
+
     
 }
