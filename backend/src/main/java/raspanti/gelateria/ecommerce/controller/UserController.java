@@ -1,5 +1,7 @@
 package raspanti.gelateria.ecommerce.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,6 +28,12 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {        

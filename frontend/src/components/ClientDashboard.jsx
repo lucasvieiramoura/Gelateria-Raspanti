@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
@@ -12,8 +13,11 @@ export default function ClientDashboard({ onLogout }) {
   const authHeader = localStorage.getItem('authHeader');
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/immutability
     loadProfile();
+    // eslint-disable-next-line react-hooks/immutability
     loadProducts();
+    // eslint-disable-next-line react-hooks/immutability
     loadPurchases();
   }, []);
 
@@ -25,8 +29,10 @@ export default function ClientDashboard({ onLogout }) {
   };
 
   const loadProducts = async () => {
-    const res = await api.get('/api/products', { headers: { Authorization: authHeader } });
-    setProducts(res.data);
+    try {
+      const res = await api.get('/api/products', { headers: { Authorization: authHeader } });
+      setProducts(res.data);
+    } catch (e) { console.error(e); }
   };
 
   const loadPurchases = async () => {
@@ -66,84 +72,85 @@ export default function ClientDashboard({ onLogout }) {
   };
 
   return (
-    <div style={{ maxWidth: '900px', margin: '20px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ddd', paddingBottom: '15px' }}>
-        <h2>Gelateria Raspanti - Portal do Cliente</h2>
-        <div>
-          <span style={{ marginRight: '15px' }}>Olá, <strong>{userData.name || userData.phoneNumber}</strong></span>
-          <button onClick={onLogout} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Sair</button>
-        </div>
-      </div>
-
-      {message && <p style={{ padding: '10px', background: '#e9ecef', borderRadius: '4px', marginTop: '15px', color: '#333' }}>{message}</p>}
-
-      {/* Cardápio com Fotos */}
-      <h3>Cardápio de Gelatos</h3>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', marginTop: '10px' }}>
-        {products.map(p => (
-          <div key={p.id} style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', background: '#f8f9fa', color: '#333' }}>
-            {p.imageUrl ? (
-              <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
-            ) : (
-              <div style={{ width: '100%', height: '140px', background: '#ddd', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', marginBottom: '10px', color: '#555' }}>
-                Sem Imagem
-              </div>
-            )}
-            <h4>{p.name}</h4>
-            <p style={{ fontSize: '13px', color: '#666' }}>{p.description}</p>
-            <p style={{ fontWeight: 'bold', color: '#28a745' }}>R$ {p.price?.toFixed(2)}</p>
-            <p style={{ fontSize: '12px' }}>Estoque disponível: {p.stockQuantity}</p>
-            <button 
-              onClick={() => addToCart(p)} 
-              disabled={p.stockQuantity <= 0}
-              style={{ width: '100%', padding: '8px', background: p.stockQuantity > 0 ? '#007bff' : '#ccc', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-              {p.stockQuantity > 0 ? 'Adicionar à Cesta' : 'Esgotado'}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {/* Cesta de Compras */}
-      <div style={{ marginTop: '30px', background: '#fff3cd', padding: '20px', borderRadius: '8px', border: '1px solid #ffeeba', color: '#333' }}>
-        <h3>Cesta de Compras</h3>
-        {cart.length === 0 ? <p>A sua cesta está vazia.</p> : (
+    <>
+      <div className="rotating-gelato-bg"></div>
+      <div className="full-screen-container">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #27272a', paddingBottom: '20px', marginBottom: '25px' }}>
+          <h2 style={{ color: '#00b37e', margin: 0 }}>Gelateria Raspanti - Portal do Cliente</h2>
           <div>
-            <ul>
-              {cart.map(item => (
-                <li key={item.id}>{item.name} (Qtd: {item.qty}) - R$ {(item.price * item.qty).toFixed(2)}</li>
-              ))}
-            </ul>
-            <form onSubmit={handleCheckout} style={{ marginTop: '15px', display: 'grid', gap: '10px' }}>
-              <label>Número do Cartão de Crédito:</label>
-              <input type="text" placeholder="0000 0000 0000 0000" value={cardNumber} onChange={e => setCardNumber(e.target.value)} required style={{ padding: '8px', width: '300px' }} />
-              <button type="submit" style={{ padding: '10px 20px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', width: '200px' }}>
-                Concluir Compra
-              </button>
-            </form>
+            <span style={{ marginRight: '15px' }}>Olá, <strong>{userData.name || userData.phoneNumber}</strong></span>
+            <button onClick={onLogout} style={{ padding: '8px 16px', background: '#f75a68', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>Sair</button>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Histórico de Compras do Cliente */}
-      <h3 style={{ marginTop: '30px' }}>Meu Histórico de Compras</h3>
-      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px', background: '#fff', color: '#333' }}>
-        <thead>
-          <tr style={{ background: '#007bff', color: '#fff' }}>
-            <th>Produto</th><th>Qtd</th><th>Total</th><th>Data</th>
-          </tr>
-        </thead>
-        <tbody>
-          {purchases.map(s => (
-            <tr key={s.id}>
-              <td>{s.productName}</td>
-              <td>{s.quantity}</td>
-              <td>R$ {s.totalPrice?.toFixed(2)}</td>
-              <td>{new Date(s.saleDate).toLocaleString()}</td>
-            </tr>
+        {message && <p style={{ padding: '12px 20px', background: '#18181b', borderLeft: '4px solid #00b37e', borderRadius: '4px', marginBottom: '25px' }}>{message}</p>}
+
+        <h3>Cardápio de Gelatos</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '20px', marginTop: '15px' }}>
+          {products.map(p => (
+            <div key={p.id} style={{ background: '#18181b', border: '1px solid #27272a', padding: '15px', borderRadius: '8px' }}>
+              {p.imageUrl ? (
+                <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
+              ) : (
+                <div style={{ width: '100%', height: '140px', background: '#09090b', borderRadius: '6px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#71717a' }}>Sem Imagem</div>
+              )}
+              <h4 style={{ margin: '5px 0' }}>{p.name}</h4>
+              <p style={{ fontSize: '13px', color: '#a1a1aa' }}>{p.description}</p>
+              <p style={{ fontWeight: 'bold', color: '#00b37e' }}>R$ {p.price?.toFixed(2)}</p>
+              <p style={{ fontSize: '12px', color: '#71717a' }}>Stock disponível: {p.stockQuantity}</p>
+              <button 
+                onClick={() => addToCart(p)} 
+                disabled={p.stockQuantity <= 0}
+                style={{ width: '100%', padding: '10px', background: p.stockQuantity > 0 ? '#00875f' : '#27272a', color: '#fff', border: 'none', borderRadius: '6px', cursor: p.stockQuantity > 0 ? 'pointer' : 'not-allowed', fontWeight: 'bold', marginTop: '10px' }}>
+                {p.stockQuantity > 0 ? 'Adicionar à Cesta' : 'Esgotado'}
+              </button>
+            </div>
           ))}
-          {purchases.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center' }}>Nenhuma compra registada.</td></tr>}
-        </tbody>
-      </table>
-    </div>
+        </div>
+
+        <div style={{ marginTop: '30px', background: '#18181b', padding: '25px', borderRadius: '8px', border: '1px solid #27272a' }}>
+          <h3>Cesta de Compras</h3>
+          {cart.length === 0 ? <p style={{ color: '#71717a' }}>A sua cesta está vazia.</p> : (
+            <div>
+              <ul style={{ paddingLeft: '20px' }}>
+                {cart.map(item => (
+                  <li key={item.id} style={{ marginBottom: '5px' }}>{item.name} (Qtd: {item.qty}) - R$ {(item.price * item.qty).toFixed(2)}</li>
+                ))}
+              </ul>
+              <form onSubmit={handleCheckout} style={{ marginTop: '20px', display: 'grid', gap: '12px', maxWidth: '400px' }}>
+                <label style={{ fontSize: '13px', color: '#a1a1aa' }}>Número do Cartão de Crédito:</label>
+                <input type="text" placeholder="0000 0000 0000 0000" value={cardNumber} onChange={e => setCardNumber(e.target.value)} required style={{ padding: '10px', background: '#09090b', color: '#fff', border: '1px solid #27272a', borderRadius: '6px' }} />
+                <button type="submit" style={{ padding: '12px', background: '#00875f', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>
+                  Concluir Compra
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
+
+        <h3 style={{ marginTop: '30px' }}>Meu Histórico de Compras</h3>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px', background: '#18181b', borderRadius: '8px', overflow: 'hidden' }}>
+          <thead>
+            <tr style={{ background: '#27272a', color: '#a1a1aa', textAlign: 'left' }}>
+              <th style={{ padding: '12px' }}>Produto</th>
+              <th style={{ padding: '12px' }}>Qtd</th>
+              <th style={{ padding: '12px' }}>Total</th>
+              <th style={{ padding: '12px' }}>Data</th>
+            </tr>
+          </thead>
+          <tbody>
+            {purchases.map(s => (
+              <tr key={s.id} style={{ borderBottom: '1px solid #27272a' }}>
+                <td style={{ padding: '12px' }}>{s.productName}</td>
+                <td style={{ padding: '12px' }}>{s.quantity}</td>
+                <td style={{ padding: '12px', color: '#00b37e' }}>R$ {s.totalPrice?.toFixed(2)}</td>
+                <td style={{ padding: '12px' }}>{new Date(s.saleDate).toLocaleString()}</td>
+              </tr>
+            ))}
+            {purchases.length === 0 && <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#71717a' }}>Nenhuma compra registada.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </>
   );
 }

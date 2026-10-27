@@ -1,117 +1,79 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react';
 import api from '../services/api';
 
 export default function AuthPage({ onLoginSuccess }) {
+  const [isLogin, setIsLogin] = useState(true);
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [code, setCode] = useState('');
-  const [step, setStep] = useState('login'); // 'login', 'register', ou 'activate'
+  const [name, setName] = useState('');
   const [message, setMessage] = useState('');
 
-  // 1. Função de Login com HTTP Basic Auth
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const authHeader = 'Basic ' + btoa(`${phone}:${password}`);
-      const response = await api.get('/api/products', {
-        headers: {
-          Authorization: authHeader
+      if (isLogin) {
+        const credentials = btoa(`${phone}:${password}`);
+        const res = await api.get('/api/users/me', {
+          headers: { Authorization: `Basic ${credentials}` }
+        });
+        if (!res.data.active) {
+          localStorage.setItem('tempPhone', phone);
+          onLoginSuccess('PENDING_ACTIVATION');
+          return;
         }
-      });
-
-      // Salva as credenciais no localStorage para futuras requisições
-      localStorage.setItem('authHeader', authHeader);
-      localStorage.setItem('userPhone', phone);
-
-      setMessage('Login realizado com sucesso!');
-      if (onLoginSuccess) {
-        onLoginSuccess();
-      }
-    } catch (error) {
-      if (error.response && error.response.status === 401) {
-        setMessage('Senha incorreta ou usuário não encontrado.');
+        localStorage.setItem('authHeader', `Basic ${credentials}`);
+        localStorage.setItem('userPhone', phone);
+        localStorage.setItem('userRole', res.data.role);
+        onLoginSuccess(res.data.role);
       } else {
-        setMessage('Erro no login: ' + (error.response?.data?.message || error.message));
+        await api.post('/api/users/register', { phoneNumber: phone, password, name });
+        localStorage.setItem('tempPhone', phone);
+        onLoginSuccess('PENDING_ACTIVATION');
       }
-    }
-  };
-
-  // 2. Função de Autocadastro
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      await api.post(`/api/auth/register?phone=${phone}&password=${password}`);
-      setMessage('Cadastro realizado com sucesso! Verifique o console do Spring Boot para obter o código SMS.');
-      setStep('activate');
-    } catch (error) {
-      setMessage('Erro ao cadastrar: ' + (error.response?.data?.message || error.message));
-    }
-  };
-
-  // 3. Função de Ativação por SMS
-  const handleActivate = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.post(`/api/auth/activate?phone=${phone}&code=${code}`);
-      setMessage(response.data + ' Faça login para continuar.');
-      setStep('login');
-    } catch (error) {
-      setMessage('Erro ao ativar conta: ' + (error.response?.data || error.message));
+    } catch (err) {
+      setMessage('Erro na autenticação: ' + (err.response?.data || err.message));
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '40px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', background: '#fff', color: '#333' }}>
-      <h2 style={{ textAlign: 'center', color: 'black' }}>Gelateria Raspanti</h2>
-      
-      {message && <p style={{ background: '#f0f0f0', padding: '10px', borderRadius: '4px', fontSize: '14px', color: '#d9534f' }}>{message}</p>}
+    <>
+      <div className="rotating-gelato-bg"></div>
+      <div className="full-screen-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ width: '100%', maxWidth: '420px', background: '#18181b', padding: '35px', borderRadius: '12px', border: '1px solid #27272a', boxSizing: 'border-box' }}>
+          <h2 style={{ textAlign: 'center', color: '#00b37e', marginBottom: '8px' }}>Gelateria Raspanti</h2>
+          <p style={{ textAlign: 'center', color: '#a1a1aa', marginBottom: '25px', fontSize: '14px' }}>{isLogin ? 'Faça login para continuar' : 'Registe a sua conta'}</p>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
-        <button onClick={() => setStep('login')} style={{ background: step === 'login' ? '#007bff' : '#ccc', color: '#fff', border: 'none', padding: '8px', cursor: 'pointer', flex: 1, marginRight: '5px' }}>Login</button>
-        <button onClick={() => setStep('register')} style={{ background: step === 'register' ? '#007bff' : '#ccc', color: '#fff', border: 'none', padding: '8px', cursor: 'pointer', flex: 1 }}>Cadastrar</button>
+          {message && <div style={{ padding: '10px', background: '#27272a', color: '#f75a68', borderRadius: '6px', marginBottom: '15px', fontSize: '13px', textAlign: 'center' }}>{message}</div>}
+
+          <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '15px' }}>
+            {!isLogin && (
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', color: '#a1a1aa', marginBottom: '5px' }}>Nome Completo:</label>
+                <input type="text" placeholder="O seu nome" value={name} onChange={e => setName(e.target.value)} required style={{ width: '100%', padding: '12px', background: '#09090b', color: '#fff', border: '1px solid #27272a', borderRadius: '6px', boxSizing: 'border-box' }} />
+              </div>
+            )}
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', color: '#a1a1aa', marginBottom: '5px' }}>Telemóvel:</label>
+              <input type="text" placeholder="O seu telemóvel" value={phone} onChange={e => setPhone(e.target.value)} required style={{ width: '100%', padding: '12px', background: '#09090b', color: '#fff', border: '1px solid #27272a', borderRadius: '6px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', color: '#a1a1aa', marginBottom: '5px' }}>Palavra-passe:</label>
+              <input type="password" placeholder="******" value={password} onChange={e => setPassword(e.target.value)} required style={{ width: '100%', padding: '12px', background: '#09090b', color: '#fff', border: '1px solid #27272a', borderRadius: '6px', boxSizing: 'border-box' }} />
+            </div>
+            <button type="submit" style={{ padding: '14px', background: '#00875f', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
+              {isLogin ? 'Entrar' : 'Registar'}
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#a1a1aa' }}>
+            {isLogin ? 'Não tem conta?' : 'Já tem conta?'}{' '}
+            <span onClick={() => setIsLogin(!isLogin)} style={{ color: '#00b37e', cursor: 'pointer', fontWeight: 'bold' }}>
+              {isLogin ? 'Registar' : 'Entrar'}
+            </span>
+          </p>
+        </div>
       </div>
-
-      {step === 'login' && (
-        <form onSubmit={handleLogin}>
-          <h3>Entrar no Sistema</h3>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Telefone:</label><br />
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ex: 11988887777" required style={{ width: '100%', padding: '8px' }} />
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Senha:</label><br />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
-          </div>
-          <button type="submit" style={{ width: '100%', padding: '10px', background: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Entrar</button>
-        </form>
-      )}
-
-      {step === 'register' && (
-        <form onSubmit={handleRegister}>
-          <h3>Autocadastro de Cliente</h3>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Telefone (WhatsApp/Login):</label><br />
-            <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Ex: 11988887777" required style={{ width: '100%', padding: '8px' }} />
-          </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Senha:</label><br />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
-          </div>
-          <button type="submit" style={{ width: '100%', padding: '10px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Cadastrar e Gerar SMS</button>
-        </form>
-      )}
-
-      {step === 'activate' && (
-        <form onSubmit={handleActivate}>
-          <h3>Ativar Conta (SMS)</h3>
-          <p style={{ fontSize: '13px', color: '#666' }}>Insira o código enviado no console do backend.</p>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Código de Ativação:</label><br />
-            <input type="text" value={code} onChange={(e) => setCode(e.target.value)} placeholder="Ex: 570038" required style={{ width: '100%', padding: '8px' }} />
-          </div>
-          <button type="submit" style={{ width: '100%', padding: '10px', background: '#ffc107', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Ativar Conta</button>
-        </form>
-      )}
-    </div>
+    </>
   );
 }

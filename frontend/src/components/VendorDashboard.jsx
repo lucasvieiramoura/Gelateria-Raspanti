@@ -1,3 +1,4 @@
+// eslint-disable-next-line no-unused-vars
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 
@@ -10,18 +11,14 @@ export default function VendorDashboard({ onLogout }) {
   const authHeader = localStorage.getItem('authHeader');
   const userPhone = localStorage.getItem('userPhone');
 
-  useEffect(() => {
-    loadProducts();
-  }, []);
+  // eslint-disable-next-line react-hooks/immutability
+  useEffect(() => { loadProducts(); }, []);
 
   const loadProducts = async () => {
     try {
-      const res = await api.get('/api/products', { headers: { Authorization: authHeader } });
-      setProducts(res.data);
-    } catch (e) {
-      console.error(e);
-      setMessage('Erro ao carregar produtos.');
-    }
+        const prodRes = await api.get('/api/products', { headers: { Authorization: authHeader } });
+        setProducts(prodRes.data);
+      } catch (e) { console.error("Erro ao carregar produtos", e); }
   };
 
   const addToCart = (product) => {
@@ -30,8 +27,6 @@ export default function VendorDashboard({ onLogout }) {
     if (existing) {
       if (existing.qty < product.stockQuantity) {
         setCart(cart.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item));
-      } else {
-        setMessage(`Stock máximo atingido para ${product.name}.`);
       }
     } else {
       setCart([...cart, { ...product, qty: 1 }]);
@@ -42,130 +37,86 @@ export default function VendorDashboard({ onLogout }) {
     setCart(cart.filter(item => item.id !== productId));
   };
 
-  const calculateTotal = () => {
-    return cart.reduce((acc, item) => acc + (item.price * item.qty), 0).toFixed(2);
-  };
-
   const handleCheckout = async (e) => {
     e.preventDefault();
-    if (cart.length === 0) {
-      setMessage('A cesta de compras está vazia.');
-      return;
-    }
-
     try {
       for (let item of cart) {
-        await api.post(`/api/sales?productId=${item.id}&quantity=${item.qty}`, {}, {
-          headers: { Authorization: authHeader }
-        });
+        await api.post(`/api/sales?productId=${item.id}&quantity=${item.qty}`, {}, { headers: { Authorization: authHeader } });
       }
-      setMessage(`Venda de balcão concluída com sucesso via ${paymentMethod}!`);
+      setMessage(`Venda de balcão efetuada com sucesso via ${paymentMethod}!`);
       setCart([]);
       loadProducts();
+    // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      setMessage('Erro ao finalizar venda: ' + (error.response?.data || error.message));
+      setMessage('Erro ao concluir venda.');
     }
   };
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '20px auto', padding: '20px', fontFamily: 'sans-serif', color: '#fff' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #444', paddingBottom: '10px' }}>
-        <h2>Gelateria Raspanti - Painel do Vendedor (PDV)</h2>
-        <div>
-          <span style={{ marginRight: '15px' }}>Vendedor: <strong>{userPhone}</strong></span>
-          <button onClick={onLogout} style={{ padding: '6px 12px', background: '#dc3545', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Sair</button>
-        </div>
-      </div>
-
-      {message && <p style={{ padding: '10px', background: '#333', borderRadius: '4px', marginTop: '15px' }}>{message}</p>}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginTop: '20px' }}>
-        
-        {/* Catálogo de Produtos em Cards com Imagem e Botão + */}
-        <div>
-          <h3>Catálogo de Produtos</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px', marginTop: '15px' }}>
-            {products.map(p => (
-              <div key={p.id} style={{ position: 'relative', background: '#1a1a1a', border: '1px solid #444', borderRadius: '8px', padding: '15px', paddingBottom: '45px' }}>
-                {p.imageUrl ? (
-                  <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '120px', background: '#333', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', marginBottom: '10px', color: '#aaa' }}>Sem Imagem</div>
-                )}
-                <h4 style={{ margin: '5px 0' }}>{p.name}</h4>
-                <p style={{ color: '#28a745', fontWeight: 'bold', margin: '5px 0' }}>R$ {p.price?.toFixed(2)}</p>
-                <p style={{ fontSize: '12px', color: '#aaa', margin: '0' }}>Stock: {p.stockQuantity}</p>
-
-                {/* Botão + no canto inferior direito */}
-                <button 
-                  onClick={() => addToCart(p)}
-                  disabled={p.stockQuantity <= 0}
-                  style={{
-                    position: 'absolute',
-                    bottom: '12px',
-                    right: '12px',
-                    width: '36px',
-                    height: '36px',
-                    background: p.stockQuantity > 0 ? '#007bff' : '#555',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '50%',
-                    fontSize: '20px',
-                    cursor: p.stockQuantity > 0 ? 'pointer' : 'not-allowed',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 5px rgba(0,0,0,0.3)'
-                  }}
-                  title={p.stockQuantity > 0 ? "Adicionar item" : "Esgotado"}
-                >
-                  +
-                </button>
-              </div>
-            ))}
+    <>
+      <div className="rotating-gelato-bg"></div>
+      <div className="full-screen-container">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #27272a', paddingBottom: '20px', marginBottom: '25px' }}>
+          <h2>Gelateria Raspanti - Painel do Vendedor (PDV)</h2>
+          <div>
+            <span style={{ marginRight: '15px' }}>Vendedor: <strong>{userPhone}</strong></span>
+            <button onClick={onLogout} style={{ padding: '8px 16px', background: '#f75a68', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Sair</button>
           </div>
         </div>
 
-        {/* Cesta de Compras e Finalização do PDV */}
-        <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '8px', border: '1px solid #444', height: 'fit-content' }}>
-          <h3>Cesta de Compras</h3>
-          {cart.length === 0 ? (
-            <p style={{ color: '#aaa', marginTop: '15px' }}>A cesta está vazia. Clique no `+` dos produtos para adicionar.</p>
-          ) : (
-            <div>
-              <ul style={{ listStyle: 'none', padding: 0, marginTop: '15px' }}>
-                {cart.map(item => (
-                  <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid #333', paddingBottom: '8px' }}>
-                    <div>
-                      <span style={{ display: 'block', fontWeight: 'bold' }}>{item.name}</span>
-                      <span style={{ fontSize: '12px', color: '#aaa' }}>Qtd: {item.qty} x R$ {item.price.toFixed(2)}</span>
-                    </div>
-                    <button onClick={() => removeFromCart(item.id)} style={{ background: '#dc3545', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '11px' }}>Remover</button>
-                  </li>
-                ))}
-              </ul>
+        {message && <div style={{ padding: '12px 20px', background: '#18181b', borderLeft: '4px solid #00b37e', borderRadius: '4px', marginBottom: '25px' }}>{message}</div>}
 
-              <div style={{ marginTop: '20px', borderTop: '1px solid #444', paddingTop: '10px' }}>
-                <h4>Total: R$ {calculateTotal()}</h4>
-              </div>
-
-              <form onSubmit={handleCheckout} style={{ marginTop: '15px', display: 'grid', gap: '10px' }}>
-                <label>Forma de Pagamento:</label>
-                <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} style={{ padding: '8px', background: '#333', color: '#fff', border: '1px solid #555' }}>
-                  <option value="Dinheiro">Dinheiro</option>
-                  <option value="Cartão">Cartão</option>
-                  <option value="Pix">Pix</option>
-                </select>
-
-                <button type="submit" style={{ padding: '10px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold', marginTop: '10px' }}>
-                  Concluir Venda PDV
-                </button>
-              </form>
+        <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '25px' }}>
+          {/* Catalogo de Cards */}
+          <div>
+            <h3>Catálogo de Produtos</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginTop: '15px' }}>
+              {products.map(p => (
+                <div key={p.id} style={{ position: 'relative', background: '#18181b', border: '1px solid #27272a', borderRadius: '8px', padding: '15px', paddingBottom: '50px' }}>
+                  {p.imageUrl ? (
+                    <img src={p.imageUrl} alt={p.name} style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '6px', marginBottom: '10px' }} />
+                  ) : (
+                    <div style={{ width: '100%', height: '140px', background: '#09090b', borderRadius: '6px', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#71717a' }}>Sem foto</div>
+                  )}
+                  <h4 style={{ margin: '5px 0' }}>{p.name}</h4>
+                  <p style={{ color: '#00b37e', fontWeight: 'bold', margin: '5px 0' }}>R$ {p.price?.toFixed(2)}</p>
+                  <p style={{ fontSize: '12px', color: '#a1a1aa' }}>Stock: {p.stockQuantity}</p>
+                  
+                  <button onClick={() => addToCart(p)} disabled={p.stockQuantity <= 0} style={{ position: 'absolute', bottom: '12px', right: '12px', width: '38px', height: '38px', background: p.stockQuantity > 0 ? '#00875f' : '#27272a', color: '#fff', border: 'none', borderRadius: '50%', fontSize: '22px', cursor: 'pointer' }}>+</button>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
 
+          {/* Cesta PDV */}
+          <div style={{ background: '#18181b', padding: '20px', borderRadius: '8px', border: '1px solid #27272a', height: 'fit-content' }}>
+            <h3>Cesta de Compras</h3>
+            {cart.length === 0 ? <p style={{ color: '#71717a' }}>A cesta está vazia.</p> : (
+              <div>
+                <ul style={{ listStyle: 'none', padding: 0 }}>
+                  {cart.map(item => (
+                    <li key={item.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', borderBottom: '1px solid #27272a', paddingBottom: '8px' }}>
+                      <div>
+                        <div>{item.name}</div>
+                        <small style={{ color: '#a1a1aa' }}>Qtd: {item.qty} x R$ {item.price.toFixed(2)}</small>
+                      </div>
+                      <button onClick={() => removeFromCart(item.id)} style={{ background: '#f75a68', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>X</button>
+                    </li>
+                  ))}
+                </ul>
+                <form onSubmit={handleCheckout} style={{ marginTop: '15px', display: 'grid', gap: '10px' }}>
+                  <select value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} style={{ padding: '10px', background: '#09090b', color: '#fff', border: '1px solid #27272a', borderRadius: '6px' }}>
+                    <option value="Dinheiro">Dinheiro</option>
+                    <option value="Cartão">Cartão</option>
+                    <option value="Pix">Pix</option>
+                  </select>
+                  <button type="submit" style={{ padding: '12px', background: '#00875f', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer' }}>Concluir Venda</button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
