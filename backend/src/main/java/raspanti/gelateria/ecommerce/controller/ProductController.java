@@ -4,18 +4,12 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 import raspanti.gelateria.ecommerce.model.Product;
+import raspanti.gelateria.ecommerce.repository.ProductRepository;
 import raspanti.gelateria.ecommerce.service.ProductService;
 
 @RestController 
@@ -25,10 +19,15 @@ public class ProductController {
     @Autowired 
     private ProductService productService;
 
+    @Autowired 
+    private ProductRepository productRepository;
+
     // Criar Produto
-    @PostMapping 
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        return ResponseEntity.ok(productService.createProduct(product));
+    @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE', 'VENDEDOR')")
+    public ResponseEntity<?> createProduct(@RequestBody Product product) {
+        Product saved = productRepository.save(product);
+        return ResponseEntity.ok(saved);
     }
 
     // Listar Produtos
@@ -45,14 +44,37 @@ public class ProductController {
 
     // Editar Produto
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product ){
-        return ResponseEntity.ok(productService.updateProduct(id, product));
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
+        Product product = productRepository.findById(id).orElse(null);
+        if (product == null) return ResponseEntity.badRequest().body("Produto não encontrado.");
+
+        product.setName(productDetails.getName());
+        product.setDescription(productDetails.getDescription());
+        product.setPrice(productDetails.getPrice());
+        product.setStockQuantity(product.getStockQuantity());
+        product.setImageUrl(productDetails.getImageUrl());
+        
+        productRepository.save(product);
+        return ResponseEntity.ok("Produto atualizado com sucesso.");
     }
 
     // Incrementar Estoque
     @PatchMapping ("/{id}/add-stock")
     public ResponseEntity<Product> addStock(@PathVariable  Long id, @RequestParam Integer quantity) {
         return ResponseEntity.ok(productService.addStock(id, quantity));
+    }
+
+    // Inativar produto (Apenas Gerente/Admin)
+    @PutMapping("/{id}/inactivate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public ResponseEntity<?> inactivateProduct(@PathVariable Long id) {
+        Product product = productRepository.findById(id).orElse(null);
+        if (product == null) return ResponseEntity.badRequest().body("Produto não encontrado.");
+
+        product.setStockQuantity(0); // Ou marcar como inativo se tiver campoativo
+        productRepository.save(product);
+        return ResponseEntity.ok("Produto inativado com sucesso.");
     }
 
     // Excluir Produto

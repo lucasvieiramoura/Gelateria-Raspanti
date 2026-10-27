@@ -54,4 +54,9 @@ public class SaleController {
         Sale savedSale = saleRepository.save(sale);
         return ResponseEntity.ok(savedSale);
     }
+
+    @GetMapping("/my-sales")
+    public List<Sale> getMySales(Authentication authentication){
+        return saleRepository.findBySellerPhone(authentication.getName());
+    }
 }

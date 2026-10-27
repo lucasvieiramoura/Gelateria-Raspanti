@@ -62,7 +62,7 @@ export default function AuthPage({ onLoginSuccess }) {
 
   return (
     <div style={{ maxWidth: '400px', margin: '40px auto', padding: '20px', border: '1px solid #ccc', borderRadius: '8px', background: '#fff', color: '#333' }}>
-      <h2 style={{ textAlign: 'center' }}>Gelateria Raspanti</h2>
+      <h2 style={{ textAlign: 'center', color: 'black' }}>Gelateria Raspanti</h2>
       
       {message && <p style={{ background: '#f0f0f0', padding: '10px', borderRadius: '4px', fontSize: '14px', color: '#d9534f' }}>{message}</p>}
 

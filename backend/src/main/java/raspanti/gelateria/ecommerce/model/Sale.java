@@ -17,7 +17,6 @@ public class Sale {
     private String sellerPhone;
     private LocalDateTime saleDate = LocalDateTime.now();
 
-    // Getters and Setters explícitos
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

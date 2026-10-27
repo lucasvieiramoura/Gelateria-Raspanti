@@ -8,9 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import raspanti.gelateria.ecommerce.model.Role;
 import raspanti.gelateria.ecommerce.model.User;
+import raspanti.gelateria.ecommerce.repository.UserRepository;
 import raspanti.gelateria.ecommerce.service.UserService;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 
 
 @RestController 
@@ -19,6 +23,21 @@ public class UserController {
     
     @Autowired 
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(Authentication authentication) {        
+        
+        User user = userRepository.findByPhoneNumber(authentication.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (user == null) return ResponseEntity.notFound().build();
+           
+        return ResponseEntity.ok(user);
+    }
 
     @PostMapping("/gerente")
     public ResponseEntity<User> createGerente(@RequestParam  String phone, @RequestParam  String password) {
@@ -45,6 +64,17 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Erro ao cadastrar funcionários");
         }
+    }
+
+    @PutMapping("/inactivate")
+    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    public ResponseEntity<?> inactivateUser(@RequestParam String phone) {
+        User user = userRepository.findByPhoneNumber(phone).orElse(null);
+        if (user == null) return ResponseEntity.badRequest().body("Utilizador não encontrado.");
+
+        user.setActive(false);
+        userRepository.save(user);
+        return ResponseEntity.ok("Utilizador inativado com sucesso.");
     }
 
     
