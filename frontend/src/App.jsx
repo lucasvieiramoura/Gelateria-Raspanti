@@ -1,77 +1,69 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import AuthPage from './components/AuthPage';
-import ActivatePage from './components/ActivatePage';
-import ClientDashboard from './components/ClientDashboard';
-import VendorDashboard from './components/VendorDashboard';
+import ActivePage from './components/ActivatePage';
 import ManagerDashboard from './components/ManagerDashboard';
-import api from './services/api';
+import VendorDashboard from './components/VendorDashboard';
+import ClientDashboard from './components/ClientDashboard';
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('authHeader'));
-  const [view, setView] = useState('login'); // 'login' ou 'activate'
-  const [phoneToActivate, setPhoneToActivate] = useState('');
-  const [userRole, setUserRole] = useState('');
+  const [currentView, setCurrentView] = useState('LOADING'); // 'AUTH', 'PENDING_ACTIVATION', 'ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_VENDEDOR', 'ROLE_CLIENTE'
 
   useEffect(() => {
-    if (isAuthenticated) {
-      // eslint-disable-next-line react-hooks/immutability
-      fetchUserRole();
+    const role = localStorage.getItem('userRole');
+    const tempPhone = localStorage.getItem('tempPhone');
+    
+    if (tempPhone && !localStorage.getItem('authHeader')) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCurrentView('PENDING_ACTIVATION');
+    } else if (role) {
+      setCurrentView(role);
+    } else {
+      setCurrentView('AUTH');
     }
-  }, [isAuthenticated]);
+  }, []);
 
-  const fetchUserRole = async () => {
-    try {
-      const res = await api.get('/api/users/me', {
-        headers: { Authorization: localStorage.getItem('authHeader') }
-      });
-      setUserRole(res.data.role); // Ex: "ROLE_CLIENTE", "ROLE_VENDEDOR", "ROLE_GERENTE", "ROLE_ADMIN"
-    } catch (e) {
-      console.error("Erro ao obter o perfil do utilizador", e);
-    }
-  };
-
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('authHeader');
-    localStorage.removeItem('userPhone');
-    setIsAuthenticated(false);
-    setUserRole('');
-    setView('login');
-  };
-
-  if (!isAuthenticated) {
-    if (view === 'activate') {
-      return (
-        <ActivatePage 
-          phoneToActivate={phoneToActivate} 
-          onActivated={() => setView('login')} 
-          onBackToLogin={() => setView('login')} 
-        />
-      );
-    }
+  if (currentView === 'LOADING') {
     return (
-      <AuthPage 
-        onLoginSuccess={handleLoginSuccess} 
-        onGoToActivate={(phone) => { setPhoneToActivate(phone); setView('activate'); }} 
+      <div className="full-screen-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+        <h2>A carregar painel e permissões...</h2>
+      </div>
+    );
+  }
+
+  if (currentView === 'PENDING_ACTIVATION') {
+    return (
+      <ActivePage 
+        onActivated={() => {
+          localStorage.removeItem('tempPhone');
+          setCurrentView('AUTH');
+        }} 
       />
     );
   }
 
-  // Redirecionamento dinâmico baseado na regra de acesso do utilizador
-  if (userRole === 'ROLE_CLIENTE') {
-    return <ClientDashboard onLogout={handleLogout} />;
-  } else if (userRole === 'ROLE_VENDEDOR') {
-    return <VendorDashboard onLogout={handleLogout} />;
-  } else if (userRole === 'ROLE_GERENTE' || userRole === 'ROLE_ADMIN') {
-    return <ManagerDashboard onLogout={handleLogout} />;
+  if (currentView === 'AUTH') {
+    return (
+      <AuthPage 
+        onLoginSuccess={(viewOrRole) => {
+          setCurrentView(viewOrRole);
+        }} 
+      />
+    );
   }
 
-  return (
-    <div style={{ textAlign: 'center', marginTop: '50px', fontFamily: 'sans-serif' }}>
-      <h3>A carregar painel e permissões...</h3>
-    </div>
-  );
+  // Dashboards baseados na Role
+  if (currentView === 'ROLE_ADMIN' || currentView === 'ROLE_GERENTE') {
+    return <ManagerDashboard onLogout={() => { localStorage.clear(); setCurrentView('AUTH'); }} />;
+  }
+
+  if (currentView === 'ROLE_VENDEDOR') {
+    return <VendorDashboard onLogout={() => { localStorage.clear(); setCurrentView('AUTH'); }} />;
+  }
+
+  if (currentView === 'ROLE_CLIENTE') {
+    return <ClientDashboard onLogout={() => { localStorage.clear(); setCurrentView('AUTH'); }} />;
+  }
+
+  return <AuthPage onLoginSuccess={(role) => setCurrentView(role)} />;
 }

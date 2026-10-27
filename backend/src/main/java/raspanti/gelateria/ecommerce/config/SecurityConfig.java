@@ -1,6 +1,5 @@
 package raspanti.gelateria.ecommerce.config;
 
-import java.beans.Customizer;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -10,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.Customizer;
 
 @Configuration 
 @EnableMethodSecurity 
@@ -25,26 +25,6 @@ public class SecurityConfig {
         org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration authenticationConfiguration) throws Exception {
     return authenticationConfiguration.getAuthenticationManager();
 }
-/* 
-    @Bean 
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                // Endpints Públicos ( Cadastro de Cliente e Ativação SMS)
-                .requestMatchers("/api/auth/**").permitAll()
-                // Cadasdo de Geretne: Apenas ADMIN
-                .requestMatchers("/api/user/gerente").hasAuthority("ROLE_ADMIN")
-                // Cadastro de Vendedor: ADMIN e Gerente 
-                .requestMatchers("/api/user/vendedor").hasAnyAuthority("ROLE_ADMIN","ROLE_GERENTE")
-                // Gestão de Produtos: aPenas Gerente
-                .requestMatchers("/api/products/**").hasAnyAuthority("ROLE_ADMIN","ROLE_GERENTE")
-                // Demais requisições precisam estar autenticadas
-                .anyRequest().authenticated()
-            ).httpBasic(httpBasic -> {});
-        return http.build();
-    }
-*/
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -58,13 +38,21 @@ public class SecurityConfig {
             }))
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll() // Libera requisições de preflight do CORS
+                // 1. Libera imediatamente as requisições de OPTIONS (CORS preflight)
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+                
+                // 2. Libera TODAS as rotas de autenticação (registo, login, ativação) PRIMEIRO
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products").hasAnyRole("ADMIN", "GERENTE")
+                //.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/products").hasAnyRole("ADMIN", "GERENTE")
+                
+                // 3. Outras rotas públicas
+                .requestMatchers("/api/products").permitAll()
+                
+                // 4. Restantes rotas exigem autenticação
                 .anyRequest().authenticated()
             )
-            .httpBasic(httpBasic -> {});
+            .httpBasic(Customizer.withDefaults());
 
-        return http.build(); // Ou mantenha a sua configuração atual de httpBasic
+        return http.build();
     }
 }

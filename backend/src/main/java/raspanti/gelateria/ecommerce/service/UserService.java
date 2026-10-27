@@ -21,13 +21,14 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
 
     // 1. Autocadastro do Cliente (informando telefone e senha)
-    public User registerCliente(String phoneNumber, String rawPassword) {
+    public User registerCliente(String phoneNumber, String rawPassword, String name) {
         if (userRepository.findByPhoneNumber(phoneNumber).isPresent()) {
             throw new RuntimeException("Este número de telefone já está cadastrado.");
         }
 
         User user = new User();
         user.setPhoneNumber(phoneNumber);
+        user.setName(name);
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setRole(Role.ROLE_CLIENTE);
         user.setActive(false); // Conta inativa até validar o SMS

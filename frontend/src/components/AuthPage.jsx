@@ -9,25 +9,42 @@ export default function AuthPage({ onLoginSuccess }) {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
 
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (isLogin) {
         const credentials = btoa(`${phone}:${password}`);
-        const res = await api.get('/api/users/me', {
-          headers: { Authorization: `Basic ${credentials}` }
-        });
-        if (!res.data.active) {
-          localStorage.setItem('tempPhone', phone);
-          onLoginSuccess('PENDING_ACTIVATION');
-          return;
+        try {
+          const res = await api.get('/api/users/me', {
+            headers: { Authorization: `Basic ${credentials}` }
+          });
+          
+          // Se por ventura vier a propriedade active
+          if (res.data && res.data.active === false) {
+            localStorage.setItem('tempPhone', phone);
+            onLoginSuccess('PENDING_ACTIVATION');
+            return;
+          }
+          
+          localStorage.setItem('authHeader', `Basic ${credentials}`);
+          localStorage.setItem('userPhone', phone);
+          localStorage.setItem('userRole', res.data.role);
+          onLoginSuccess(res.data.role);
+        } catch (err) {
+          // Se o servidor retornar 401, pode ser conta não ativada ou credenciais erradas. 
+          // Vamos guardar o telemóvel temporariamente e permitir ir para a ativação se necessário, ou exibir erro.
+          if (err.response && err.response.status === 401) {
+            // Verifica se o utilizador quer ativar ou se as credenciais estão pendentes
+            localStorage.setItem('tempPhone', phone);
+            setMessage('Conta possivelmente por ativar ou credenciais inválidas. Tente ativar se recebeu o código.');
+          } else {
+            throw err;
+          }
         }
-        localStorage.setItem('authHeader', `Basic ${credentials}`);
-        localStorage.setItem('userPhone', phone);
-        localStorage.setItem('userRole', res.data.role);
-        onLoginSuccess(res.data.role);
       } else {
-        await api.post('/api/users/register', { phoneNumber: phone, password, name });
+        // Registo
+        
+        await api.post(`/api/auth/register?phone=${phone}&password=${password}&name=${name}`);
         localStorage.setItem('tempPhone', phone);
         onLoginSuccess('PENDING_ACTIVATION');
       }
@@ -64,6 +81,14 @@ export default function AuthPage({ onLoginSuccess }) {
             <button type="submit" style={{ padding: '14px', background: '#00875f', color: '#fff', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }}>
               {isLogin ? 'Entrar' : 'Registar'}
             </button>
+            {/* Adicione este botão logo abaixo do formulário ou nas opções */}
+              {isLogin && (
+                <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                  <span onClick={() => { localStorage.setItem('tempPhone', phone); onLoginSuccess('PENDING_ACTIVATION'); }} style={{ color: '#fba94c', cursor: 'pointer', fontSize: '13px', textDecoration: 'underline' }}>
+                    Já tenho um código de ativação
+                  </span>
+                </div>
+              )}
           </form>
 
           <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: '#a1a1aa' }}>
