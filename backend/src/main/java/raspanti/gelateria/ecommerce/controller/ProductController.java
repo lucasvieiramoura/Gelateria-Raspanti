@@ -42,23 +42,13 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(id));
     } 
 
-    // Editar Produto
+    // Endpoint de Atualização (PUT) essencial para atualizar o stock e outros campos
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
-        Product product = productRepository.findById(id).orElse(null);
-        if (product == null) return ResponseEntity.badRequest().body("Produto não encontrado.");
-
-        product.setName(productDetails.getName());
-        product.setDescription(productDetails.getDescription());
-        product.setPrice(productDetails.getPrice());
-        product.setStockQuantity(product.getStockQuantity());
-        product.setImageUrl(productDetails.getImageUrl());
-        
-        productRepository.save(product);
-        return ResponseEntity.ok("Produto atualizado com sucesso.");
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
+        Product updatedProduct = productService.updateProduct(id, productDetails);
+        return ResponseEntity.ok(updatedProduct);
     }
-
     // Incrementar Estoque
     @PatchMapping ("/{id}/add-stock")
     public ResponseEntity<Product> addStock(@PathVariable  Long id, @RequestParam Integer quantity) {
