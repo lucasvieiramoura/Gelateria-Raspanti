@@ -51,22 +51,22 @@ O fluxo de navegação adapta-se automaticamente com base no papel (*role*) e no
 
 🔐 1. Autenticação, Registo e Ativação
 ![Login] ![Login Page](LoginPage.png)
-![AutoRegister] ![Auto Register Page] (AutoRegisterPage.png) 
-![ActivatePage] ![Activate Page] (ActivatePage.png)  
+![AutoRegister] ![Auto Register Page](AutoRegisterPage.png)
+![ActivatePage] ![Activate Page](ActivatePage.png)
 
 ⚙️ 2. Painel Administrativo e Gestão (Manager / Admin)
 Gestão completa de funcionários, catálogo de produtos, stock em tempo real e relatórios de desempenho.
 
-![DashboardGerenteCadastraFuncionarioOuProduto] ![Dashboard Gerente Page - Cadastro Produto/Funcionario] (DashboardGerenteCadastraFuncionarioOuProduto.png)
-![DashboardGerenteEditaFuncionarioOuProduto] ![Dashboard Gerente Page - Edita Produto/Funcionario] (DashboardGerenteEditaFuncionarioOuProduto.png)
-![DashboarGerenteRakingDesempenhoPorPeriodo] ![Dashboard Gerente Page - Ranking e Desempenho por período] (DashboarGerenteRakingDesempenhoPorPeriodo.png)
+![DashboardGerenteCadastraFuncionarioOuProduto] ![Dashboard Gerente Page - Cadastro Produto/Funcionario](DashboardGerenteCadastraFuncionarioOuProduto.png)
+![DashboardGerenteEditaFuncionarioOuProduto] ![Dashboard Gerente Page - Edita Produto/Funcionario](DashboardGerenteEditaFuncionarioOuProduto.png)
+![DashboarGerenteRakingDesempenhoPorPeriodo] ![Dashboard Gerente Page - Ranking e Desempenho por período](DashboarGerenteRakingDesempenhoPorPeriodo.png)
 
 🛒 3. Portal do Cliente e E-commerce
 Cardápio interativo, adição rápida de gelatos à cesta, checkout simulado e histórico de compras atualizado.
 
-![ClientePageSemCompraCarrinhoVazio] ![Página do Cliente - Sem compra e histórico de compras] (ClientePageSemCompraCarrinhoVazio.png)
-![ClientePageItensNoCarrinho] ![Página do Cliente - Itens no carrinho] (ClientePageItensNoCarrinho.png)
-![ClientePageCompraRealizadaComHistoricoDisponivel] ![Página do Cliente - Compra realizada com histórico] (ClientePageCompraRealizadaComHistoricoDisponivel.png)
+![ClientePageSemCompraCarrinhoVazio] ![] ![Página do Cliente - Sem compra e histórico de compras](ClientePageSemCompraCarrinhoVazio.png)
+![ClientePageItensNoCarrinho] ![Página do Cliente - Itens no carrinho](ClientePageItensNoCarrinho.png)
+![ClientePageCompraRealizadaComHistoricoDisponivel] ![Página do Cliente - Compra realizada com histórico](ClientePageCompraRealizadaComHistoricoDisponivel.png)
 
 
 ⚙️ Como Executar o Projeto Localmente
